@@ -1,11 +1,7 @@
-#using DifferentialEquations
-#using Plots
-#using Statistics
 using QuadGK
 using Distributions
-
 using Interpolations
-#using Optim
+include("simulated_likelihood_utilities.jl")
 
 # Definición del modelo SIS estocástico 
 
@@ -70,7 +66,16 @@ Implementación de los métodos Euler-Maruyama y Milstein.
 EM: Euler-Maruyama
 Mil: Milstein
 """
-function solveSIS(θ, T, x₀; t₀ = 0, dt = 0.001, method = "EM")
+function _updatestate!(Y, ts, θ, dt, dW, extra_term)
+    for i in 2:length(ts)
+        Y[i] = Y[i-1]
+        Y[i] += _driftSIS(Y[i-1], θ, ts[i-1])*dt
+        Y[i] += _diffusionSIS(Y[i-1], θ, ts[i-1])*dW[i-1]*sqrt(dt)
+        Y[i] += extra_term*0.5*_diffusionSIS(Y[i-1], θ, ts[i-1])*_diffusionSISderiv(Y[i-1], θ, ts[i-1])*((dW[i-1]*sqrt(dt))^2 - dt)
+    end
+end
+
+function setvalues(θ, T, x₀, t₀, dt, method)
     extra_term = 0.0
     if method == "Mil"
         extra_term = 1.0
@@ -78,13 +83,19 @@ function solveSIS(θ, T, x₀; t₀ = 0, dt = 0.001, method = "EM")
     ts = collect(t₀:dt:T)
     Y = zeros(length(ts))
     Y[1] = x₀
-    for i in 2:length(ts)
-        dW = rand(Normal(0, sqrt(dt)))
-        Y[i] = Y[i-1]
-        Y[i] += _driftSIS(Y[i-1], θ, ts[i-1])*dt
-        Y[i] += _diffusionSIS(Y[i-1], θ, ts[i-1])*dW
-        Y[i] += extra_term*0.5*_diffusionSIS(Y[i-1], θ, ts[i-1])*_diffusionSISderiv(Y[i-1], θ, ts[i-1])*(dW^2 - dt)
-    end
+    return extra_term, ts, Y
+end
+
+function solveSIS(θ, T, x₀; t₀ = 0, dt = 0.001, method = "EM")
+    extra_term, ts, Y = setvalues(θ, T, x₀, t₀, dt, method)
+    dW = rand(Normal(0, 1), length(ts)-1)
+    _updatestate!(Y, ts, θ, dt, dW, extra_term)
+    return Y
+end
+
+function solveSIS(θ, T, x₀, dW; t₀ = 0, dt = 0.001, method = "EM")
+    extra_term, ts, Y = setvalues(θ, T, x₀, t₀, dt, method)
+    _updatestate!(Y, ts, θ, dt, dW, extra_term)
     return Y
 end
 
@@ -107,5 +118,5 @@ end
 """Estima σ del modelo SIS por medio de la variación cuadrática."""
 function SIS_sigma_by_qv(X, ts)
     Xi = linear_interpolation(ts, X)
-    sqrt( sum( diff(X).^2 ) / quadgk(t -> Xi(t)^2 * (N-Xi(t))^2, 0, 20)[1])
+    sqrt( sum( diff(X).^2 ) / quadgk(t -> Xi(t)^2 * (N-Xi(t))^2, ts[1], ts[end])[1])
 end
