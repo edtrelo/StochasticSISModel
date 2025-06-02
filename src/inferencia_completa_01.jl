@@ -4,6 +4,8 @@ using Random
 using Statistics
 using LinearSolve
 using LaTeXStrings
+using KernelDensity
+using Distributions
 Random.seed!(1)
 
 T = 500
@@ -65,29 +67,3 @@ end
 
 plot(plots..., layout=(3,1), size = (500, 400), top_margin = 3.5*Plots.mm)
 
-estimators = zeros(3, 100)
-
-ts = collect(0:dt:T)
-for i in 1:100
-    X = solveSIS(p_original, T, I₀; dt = dt)
-    tray = [X ts]
-    estimators[1:end, i] .= EstimadorMVSIS(tray)
-end
-
-histogram(X[1:end, 1])
-
-X = transpose(estimators[1:2, 1:end])
-Z = [pdf(mvnorm,[i,j]) for i in 0:100, j in 0:100]
-plot(0:100,0:100,Z,st=:surface)
-
-mvnorm = fit(MvNormal, X')
-Z = [pdf(mvnorm,[i,j]) for i in minimum(X[1:end, 1]):0.000001:maximum(X[1:end, 1]), 
-j in minimum(X[1:end, 2]):0.000001:maximum(X[1:end, 2])]
-plot(minimum(X[1:end, 2]):0.000001:maximum(X[1:end, 2]),minimum(X[1:end, 1]):0.000001:maximum(X[1:end, 1]),Z,st=:surface)
-
-
-f(x,y) = pdf(mvnorm, [x,y])
-contourf(minimum(X[1:end, 1]):0.000001:maximum(X[1:end, 1]), minimum(X[1:end, 2]):0.000001:maximum(X[1:end, 2]), f, color=:viridis)
-
-
-collect(minimum(X[1:end, 2]):0.0001:maximum(X[1:end, 2]))
