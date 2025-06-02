@@ -7,6 +7,7 @@ using Random
 using Interpolations
 using Optim
 Random.seed!(1)
+
 # Utilidades ------------------------------------------------------------------- #
 
 # Definición del modelo SIS estocástico 
@@ -254,6 +255,7 @@ N = 763
 γ = 1/7
 σ = 0.0003
 p = (β, γ, σ, N)
+dt = 0.001
 does_disease_dies(p)
 #R₀ = (β*N)/γ - ((σ*N)^2)/(2*γ)
 
@@ -262,20 +264,22 @@ X = solveSIS(p, 30.0, I₀; method = "Mil")
 length(X)
 ts = collect(0:dt:30.0)
 tray = plot(ts, X, xlabel = "t", ylabel = "Infectados")
-savefig(tray, "D:/Edgar Trejo/Universidad/POMP/data/tray.png")
+#savefig(tray, "D:/Edgar Trejo/Universidad/POMP/data/tray.png")
 # Estimación de σ por medio de variación cuadrática
 ss = SIS_sigma_by_qv(X, ts)
 Xi = linear_interpolation(ts, X)
 function loglike(q)
-    beta, gamma = q 
-    p = (beta, gamma, ss, N)
+    beta = q[1]
+    p = (beta, γ, ss, N)
     i1 = itointegral(x -> _driftSIS(x, p, 0)/_diffusionSIS(x, p, 0)^2, X)
-    i2 = quadgk(s -> _driftSIS(Xi(s), p, 0)^2/_diffusionSIS(Xi(s), p, 0)^2, 0, 20)[1]
+    i2 = quadgk(s -> _driftSIS(Xi(s), p, 0)^2/_diffusionSIS(Xi(s), p, 0)^2, 0, 30)[1]
     i1 - 1/2 * i2
 end
 
-# En construcción
-sol_maximizer = optimize(x -> -loglike(x), [0.0, 0.0], Inf, [0.1, 0.1])
-pm = Optim.maximizer(sol_maximizer)
+# It-It-1 = bI-1(N-I-1)-γ i
+((Xi(1)-Xi(0))+(1/7)*Xi(0))/(Xi(0)*(N-Xi(0)))
+
+sol_maximizer = optimize(x -> -loglike(x), [0.0007193])
+pm = Optim.minimizer(sol_maximizer)
 pm
 
