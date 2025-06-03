@@ -126,7 +126,6 @@ function q(θ, M, S, Ynext, tnext, Ycurrent, tcurrent, DZ, N)
     end 
     return suma/S
 end
-
 function ∇F_β(β, γ, σ, DZ, M, S, h, obs, N, obs_ts)
     value = 0
     for i in 1:(length(obs)-1)
@@ -137,8 +136,7 @@ function ∇F_β(β, γ, σ, DZ, M, S, h, obs, N, obs_ts)
         value+= ∂q∂β(M, S, h, β, γ, σ, N, DZ, Ycurrent, Ynext)/q([β, γ, σ], M, S, Ynext, tnext, Ycurrent, tcurrent, DZ, N)
     end
     return value
-end
-
+end 
 function ∇F_γ(β, γ, σ, DZ, M, S, h, obs, N, obs_ts)
     value = 0
     for i in 1:(length(obs)-1)
@@ -150,7 +148,6 @@ function ∇F_γ(β, γ, σ, DZ, M, S, h, obs, N, obs_ts)
     end
     return value
 end
-
 function ∇F_σ(β, γ, σ, DZ, M, S, h, obs, N, obs_ts)
     value = 0
     for i in 1:(length(obs)-1)
@@ -162,7 +159,6 @@ function ∇F_σ(β, γ, σ, DZ, M, S, h, obs, N, obs_ts)
     end
     return value
 end
-
 # Gradiente de la log-verosimilitud
 function ∇log_likelihood(x_0, DZ, M, S, h, obs, N, obs_ts)
     β, γ, σ = x_0 
@@ -170,21 +166,18 @@ function ∇log_likelihood(x_0, DZ, M, S, h, obs, N, obs_ts)
     ∇F_γ(β, γ, σ, DZ, M, S, h, obs, N, obs_ts), 
     ∇F_σ(β, γ, σ, DZ, M, S, h, obs, N, obs_ts)]
 end
-
 function ∇log_likelihood(x_0, DZ, M, S, h, obs, N, obs_ts)
     β, γ, σ = x_0 
     [∇F_β(β, γ, σ, DZ, M, S, h, obs, N, obs_ts), 
     ∇F_γ(β, γ, σ, DZ, M, S, h, obs, N, obs_ts), 
     ∇F_σ(β, γ, σ, DZ, M, S, h, obs, N, obs_ts)]
 end
-
 function ∇F!(F, x_0)
     β, γ, σ = x_0 
     F[1] = -∇F_β(β, γ, σ, DZ, M, S, h, obs, N, obs_ts)
     F[2] = -∇F_γ(β, γ, σ, DZ, M, S, h, obs, N, obs_ts) 
     F[3] = -∇F_σ(β, γ, σ, DZ, M, S, h, obs, N, obs_ts)
 end
-
 function ∇F(x_0)
     β, γ, σ = x_0 
     [∇F_β(β, γ, σ, DZ, M, S, h, obs, N, obs_ts),
@@ -198,7 +191,8 @@ function F(x_0)
         return -Inf
     end
     for i in 2:(length(obs)-1)
-        suma += log(q(x_0, M, S, obs[i], obs_ts[i], obs[i-1], obs_ts[i-1], DZ, N))
+        dz = DZ[i]
+        suma += log(q(x_0, M, S, obs[i], obs_ts[i], obs[i-1], obs_ts[i-1], dz, N))
     end
     return suma
 end
