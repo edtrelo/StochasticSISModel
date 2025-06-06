@@ -7,67 +7,11 @@ using LaTeXStrings
 using KernelDensity
 using Distributions
 using Interpolations
+using Optim
+using DataFrames
+using CSV
+using StatsPlots
 Random.seed!(1)
-
-T = 500
-M = 10000
-dt = T/M
-N = 763
-β = 0.00035
-γ = 1/32 # 0.03125
-σ = 0.0001
-p_original = (β, γ, σ, N)
-I₀ = 10
-does_disease_dies(p_original)
-
-function EstimadorMVSIS(X)
-    ts = X[1:end, 2]
-    Xi = linear_interpolation(ts, X[1:end, 1])
-
-    b = quadgk(t->1/(N-Xi(t)), 0, ts[end])[1]
-    d = quadgk(t->1/(N-Xi(t))^2, 0, ts[end])[1]
-
-    x = itointegral(y-> 1/(y*(N-y)), X[1:end, 1])
-    y = itointegral(y-> 1/(y*(N-y)^2), X[1:end, 1])
-
-    A = [ts[end] -b; b -d]
-    v = [x, y]
-    prob = LinearProblem(A, v)
-    b, g = solve(prob)
-    b, g, SIS_sigma_by_qv(X[1:end, 1], ts)
-end
-
-X = solveSIS(p_original, T, I₀; dt = dt)
-ts = collect(0:dt:T)
-tray = [X ts]
-
-times = collect(20:20:T)
-estimators = zeros(3, length(times))
-for (i, t) in enumerate(times)
-    subtray =tray[(tray[1:end, 2]).<t, 1:end]
-    estimators[1:end, i] .= EstimadorMVSIS(subtray)
-end
-# Obtención de los estimadores de MV y el de σ
-
-
-plots = Any[]
-xlabels = ["", "", "T"]
-ylabels = [L"\hat{\beta}_{MV}", L"\hat{\gamma}_{MV}", L"\hat{\sigma}"]
-for i in 1:3
-    y = estimators[i, 1:end]
-    exponente = floor(log10(maximum(y)))
-    p =  plot(times, y ./ (10^(exponente)), legend=false, lw=2, 
-    xlabel = xlabels[i], ylabel = ylabels[i], marker = :circle, yformatter = identity)  
-    i_exp = Int(exponente)
-    p = annotate!(17, 
-        maximum(y) / (10^(exponente)) + ((maximum(y))-minimum(y))/(10^(exponente)) * 0.15, 
-        (L"10^{%$i_exp}", 7, :top, :center)) 
-    p = hline!([p_original[i] ./ (10^(exponente)) ])
-    push!(plots, p)
-end
-
-plot_est = plot(plots..., layout=(3,1), top_margin = 3.5*Plots.mm, dpi = 200)
-savefig(plot_est, "D:/Edgar Trejo/Universidad/Proyecto/StochasticSISModel/data/images/est_info_completa.png")
 
 # datos discretos
 
@@ -111,7 +55,7 @@ upper = [Inf, 52/3]
 sol = optimize(x -> -likelihhod_info_completa(x), lower, upper, θ₀, Fminbox(BFGS()); inplace = false)
 θmle = sol.minimizer
 # simulaciones vs observaciones
-T = obs_ts[end]
+T = obs_ts[end]+0.5
 dt = 0.001
 ts = collect(0:dt:T)
 # Aquí se guardarán las simulaciones
@@ -127,20 +71,28 @@ intervals = zeros(3, length(ts))
 for i in 1:length(ts)
     datai = sim[1:end, i]
     intervals[2, i] = mean(datai)
-    intervals[1, i] = quantile(datai, 0.05)
-    intervals[3, i] = quantile(datai, 0.95)
+    intervals[1, i] = quantile(datai, 0.05/2)
+    intervals[3, i] = quantile(datai, 1-0.05/2)
 end
 # Gráficas 🦖
 m = intervals[2, 1:end] # mean para Xₜ
 low = intervals[1, 1:end] # cuantil 0.05 para Xₜ
 upper = intervals[3, 1:end] # cuantil 0.95 
+
+data_simulaciones_4_2_2 = DataFrame(time = ts, mean = m, low_limit = low, upper_limit = upper)
+CSV.write("D:/Edgar Trejo/Universidad/Proyecto/StochasticSISModel/data/samples/simulaciones_4_2_1.csv", 
+          data_simulaciones_4_2_2, writeindex=false)
+
+theme(:default)
 plot(ts, m, ribbon = (m.-low, upper.-m), label = "Media de la trayectoria", lw = 2,
-     title = "Simulación con parámetros estimados por\ntratamiento de información completa", 
-     xlabel = "Tiempo (en años)", ylabel = "Proporción de infectados")
-plot!(ts, low, color = :gray, label = "Cuantiles p = 0.05, 0.95")
+     title = "\n"*L"\textbf{a}."*" Simulación contra datos observados", 
+     titlefont = 10, 
+     xlabel = "t", ylabel = "Proporción de infectados")
+plot!(ts, low, color = :gray, label = "Cuantiles "*L"\alpha = 0.05")
 plot!(ts, upper, color = :gray, label = false)
-plot_sims = plot!(obs_ts, obs, seriestype = :scatter, label = "Observaciones", dpi = 200)
-savefig(plot_sims, "D:/Edgar Trejo/Universidad/Proyecto/StochasticSISModel/data/images/simulacion_info_completa.png")
+plot_sims = plot!(obs_ts, obs, xticks = xticks = (obs_ts, string.(2011:2022)),
+                  seriestype = :scatter, label = "Observaciones", tickfont = 7, guidefont = 9,
+                  bottom_margin = 5Plots.mm, left_margin = 5Plots.mm, dpi=200)
 
 # Validación del modelo :)
 # Obtención de valores estimados
@@ -163,8 +115,14 @@ end
 # Análsis de los residuales ¿Cumplen con la normalidad?
 # qq-plot: los puntos deben estar en la identidad 
 plot_qq = plot(qqnorm(residuals), xlabel = "Datos", ylabel = "Normales", 
-title = "Comparación de residuales", dpi = 200)
-savefig(plot_qq, "D:/Edgar Trejo/Universidad/Proyecto/StochasticSISModel/data/images/qqplot_info_completa.png")
+title = "\n"*L"\textbf{b}."*" Qqplot de residuales", titlefont = 10, lw = 2, tickfont = 8, guidefont = 9,
+bottom_margin = 5Plots.mm, right_margin = 5Plots.mm, topmargin = 5Plots.mm, dpi = 200)
+
+result_plot = plot(plot_sims, plot_qq, layout = @layout([a{0.66w} b{0.34w}]), size = (800, 300), dpi = 200,
+plot_title = "Estimación con la metodología de información completa", plot_titlefont = 12,
+)
+
+savefig(result_plot, "D:/Edgar Trejo/Universidad/Proyecto/StochasticSISModel/data/images/plot_4_2_1.png")
 # prueba estadística
 prueba = ShapiroWilkTest(residuals)
 # rss
@@ -173,3 +131,6 @@ sim_means = interp_means.(obs_ts[2:end])
 
 mae(obs[2:end], sim_means)
 mse(obs[2:end], sim_means)
+
+
+
