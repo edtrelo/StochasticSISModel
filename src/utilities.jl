@@ -120,3 +120,13 @@ function SIS_sigma_by_qv(X, ts)
     Xi = linear_interpolation(ts, X)
     sqrt( sum( diff(X).^2 ) / quadgk(t -> Xi(t)^2 * (N-Xi(t))^2, ts[1], ts[end])[1])
 end
+
+"""Calcula la mean squared error"""
+function mse(obs, predicted)
+    return sum((obs.-predicted).^2)/length(obs)
+end
+
+"""Mean absolute error"""
+function mae(obs, predicted)
+    return sum(abs.(obs.-predicted))/length(obs)
+end
