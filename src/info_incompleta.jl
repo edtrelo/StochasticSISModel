@@ -70,7 +70,7 @@ descartados = 0
 estimadores_buenos = estimadores[1:end, estimadores[1, 1:end].!=0]
 # CSV.write("sample_estimadores_info_incompleta.csv",  Tables.table(transpose(estimadores_buenos)), 
 #     header = ["beta","gamma","sigma"])
-estimadores_buenos = CSV.read("D:/Edgar Trejo/Universidad/Proyecto/data/samples/sample_estimadores_info_incompleta.csv",
+estimadores_buenos = CSV.read("D:/Edgar Trejo/Universidad/Proyecto/StochasticSISModel/data/samples/sample_estimadores_info_incompleta.csv",
 DataFrame)
 
 sample_beta = estimadores_buenos[!, "beta"]
@@ -81,7 +81,7 @@ hb = histogram(sample_beta, normalize = :pdf, xlabel = L"\hat{\beta}_{MVS}", lab
 hg = histogram(log2.(sample_gamma), normalize = :pdf, xlabel = L"\log_2(\hat{\gamma}_{MVS})", label = false)
 hs = histogram(sample_sigma, normalize = :pdf, xlabel = L"\hat{\sigma}_{MVS}", label = false)
 hists = plot(hb, hg, hs, layout = (3,1), dpi = 200)
-savefig(hists, "D:/Edgar Trejo/Universidad/Proyecto/data/images/samples_MVS.png")
+savefig(hists, "D:/Edgar Trejo/Universidad/Proyecto/StochasticSISModel/data/images/samples_MVS.png")
 
 # intervalos de confianza
 ibeta = (quantile(sample_beta, 0.05/2), quantile(sample_beta, 1-0.05/2))
@@ -123,7 +123,7 @@ plot(ts, m, ribbon = (m.-low, upper.-m), label = "Media de la trayectoria", lw =
 plot!(ts, low, color = :gray, label = "Cuantiles p = 0.05, 0.95")
 plot!(ts, upper, color = :gray, label = false)
 plot_sims = plot!(obs_ts, obs, seriestype = :scatter, label = "Observaciones", dpi = 200)
-savefig(plot_sims, "D:/Edgar Trejo/Universidad/Proyecto/data/images/sims_theta_MVS.png")
+savefig(plot_sims, "D:/Edgar Trejo/Universidad/Proyecto/StochasticSISModel/data/images/sims_theta_MVS.png")
 # Validación del modelo :)
 # Obtención de valores estimados
 #βmle, γmle, σmle = θmle
@@ -147,7 +147,7 @@ end
 # qq-plot: los puntos deben estar en la identidad 
 plot_qq = plot(qqnorm(residuals), xlabel = "Datos", ylabel = "Normales", 
 title = "Comparación de residuales", dpi = 200)
-savefig(plot_qq, "D:/Edgar Trejo/Universidad/Proyecto/data/images/qqplot_info_incompleta.png")
+savefig(plot_qq, "D:/Edgar Trejo/Universidad/Proyecto/StochasticSISModel/data/images/qqplot_info_incompleta.png")
 # prueba estadística
 prueba = ShapiroWilkTest(residuals)
 
@@ -219,7 +219,7 @@ hb = histogram(sample_beta, normalize = :pdf, xlabel = L"\hat{\beta}_{MVS}", lab
 hg = histogram(sample_gamma, normalize = :pdf, xlabel = L"\hat{\gamma}_{MVS}", label = false)
 hs = histogram(sample_sigma, normalize = :pdf, xlabel = L"\hat{\sigma}_{MVS}", label = false)
 hists = plot(hb, hg, hs, layout = (3,1), dpi = 200)
-savefig(hists, "D:/Edgar Trejo/Universidad/Proyecto/data/images/samples_MVS_precovid.png")
+savefig(hists, "D:/Edgar Trejo/Universidad/Proyecto/StochasticSISModel/data/images/samples_MVS_precovid.png")
 
 # intervalos de confianza
 ibeta = (quantile(sample_beta, 0.05/2), quantile(sample_beta, 1-0.05/2))
@@ -261,7 +261,7 @@ plot(ts, m, ribbon = (m.-low, upper.-m), label = "Media de la trayectoria", lw =
 plot!(ts, low, color = :gray, label = "Cuantiles p = 0.05, 0.95")
 plot!(ts, upper, color = :gray, label = false)
 plot_sims = plot!(obs_ts, obs, seriestype = :scatter, label = "Observaciones", dpi = 200)
-savefig(plot_sims, "D:/Edgar Trejo/Universidad/Proyecto/data/images/sims_theta_MVS_precovid.png")
+savefig(plot_sims, "D:/Edgar Trejo/Universidad/Proyecto/StochasticSISModel/data/images/sims_theta_MVS_precovid.png")
 # Validación del modelo :)
 # Obtención de valores estimados
 #βmle, γmle, σmle = θmle
@@ -285,7 +285,7 @@ end
 # qq-plot: los puntos deben estar en la identidad 
 plot_qq = plot(qqnorm(residuals), xlabel = "Datos", ylabel = "Normales", 
 title = "Comparación de residuales", dpi = 200)
-savefig(plot_qq, "D:/Edgar Trejo/Universidad/Proyecto/data/images/qqplot_info_incompleta_precovid.png")
+savefig(plot_qq, "D:/Edgar Trejo/Universidad/Proyecto/StochasticSISModel/data/images/qqplot_info_incompleta_precovid.png")
 # prueba estadística
 prueba = ShapiroWilkTest(residuals) # p-value = 0.5277
 

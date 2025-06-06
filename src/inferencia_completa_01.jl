@@ -67,7 +67,7 @@ for i in 1:3
 end
 
 plot_est = plot(plots..., layout=(3,1), top_margin = 3.5*Plots.mm, dpi = 200)
-savefig(plot_est, "D:/Edgar Trejo/Universidad/Proyecto/data/images/est_info_completa.png")
+savefig(plot_est, "D:/Edgar Trejo/Universidad/Proyecto/StochasticSISModel/data/images/est_info_completa.png")
 
 # datos discretos
 
@@ -140,7 +140,7 @@ plot(ts, m, ribbon = (m.-low, upper.-m), label = "Media de la trayectoria", lw =
 plot!(ts, low, color = :gray, label = "Cuantiles p = 0.05, 0.95")
 plot!(ts, upper, color = :gray, label = false)
 plot_sims = plot!(obs_ts, obs, seriestype = :scatter, label = "Observaciones", dpi = 200)
-savefig(plot_sims, "D:/Edgar Trejo/Universidad/Proyecto/data/images/simulacion_info_completa.png")
+savefig(plot_sims, "D:/Edgar Trejo/Universidad/Proyecto/StochasticSISModel/data/images/simulacion_info_completa.png")
 
 # Validación del modelo :)
 # Obtención de valores estimados
@@ -164,7 +164,7 @@ end
 # qq-plot: los puntos deben estar en la identidad 
 plot_qq = plot(qqnorm(residuals), xlabel = "Datos", ylabel = "Normales", 
 title = "Comparación de residuales", dpi = 200)
-savefig(plot_qq, "D:/Edgar Trejo/Universidad/Proyecto/data/images/qqplot_info_completa.png")
+savefig(plot_qq, "D:/Edgar Trejo/Universidad/Proyecto/StochasticSISModel/data/images/qqplot_info_completa.png")
 # prueba estadística
 prueba = ShapiroWilkTest(residuals)
 # rss
