@@ -130,3 +130,33 @@ end
 function mae(obs, predicted)
     return sum(abs.(obs.-predicted))/length(obs)
 end
+
+# --- verosimilitud simulada
+
+# Función que aproxima la densidad de transisión.
+function q(θ, M, S, Ynext, tnext, Ycurrent, tcurrent, DZ, N)
+    h = (tnext - tcurrent)/M
+    β, γ, σ = θ
+    suma = 0
+    for s in 1:S 
+        Z = solveSIS([β, γ, σ, N], (tnext - tcurrent), Ycurrent, DZ[s, 1:end]; dt = h)
+        zs = Z[end-1]
+        D = Normal(zs + (β*zs*(N-zs) - γ*zs)*h, σ*zs*(N-zs)*sqrt(h))
+        suma += pdf(D, Ynext)
+    end 
+    return suma/S
+end
+
+"""Función de log-verosimilitud simulada"""
+function F(x_0)
+    suma = 0
+    if sum(x_0 .<= 0) > 0
+        return -Inf
+    end
+    for i in 2:(length(obs)-1)
+        dz = DZ[i]
+        suma += log(q(x_0, M, S, obs[i], obs_ts[i], obs[i-1], obs_ts[i-1], dz, N))
+    end
+    return suma
+end
+
