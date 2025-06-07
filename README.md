@@ -3,7 +3,7 @@
 En este repositorio sirve para presentar el código usado para realizar *simulación* e *inferencia* en un modelo epidemiológico SIS 
 estocástico, como parte del curso **Proyecto I** 2025-02, de la Facultad de Ciencias de la UNAM.
 
-El modelo SIS con el que se trabaja tiene la forma de la siguiente ecuación diferencial estástica
+El modelo SIS con el que se trabaja tiene la forma de la siguiente ecuación diferencial estocástica
 
 $$dI_t = (\beta I_t(N-I_t)-\gamma I_t)dt + \sigma I_t(N-I_t)dW_t$$
 
